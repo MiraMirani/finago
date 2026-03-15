@@ -1,0 +1,55 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+
+  @@map("booking_status")
+}
+
+model Room {
+  id        Int       @id @default(autoincrement())
+  roomNumber String    @map("room_number") @unique
+  category  String
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  bookings  Booking[]
+
+  @@map("rooms")
+}
+
+model Guest {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  phone     String?
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  bookings  Booking[]
+
+  @@map("guests")
+}
+
+model Booking {
+  id          BigInt      @id @default(autoincrement())
+  guestId     Int         @map("guest_id")
+  roomId      Int         @map("room_id")
+  checkInDate DateTime    @map("check_in_date") @db.Date
+  checkOutDate DateTime   @map("check_out_date") @db.Date
+  status      BookingStatus @default(pending)
+  source      String      @default("website")
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  cancelledAt DateTime?   @map("cancelled_at") @db.Timestamptz(6)
+  guest       Guest       @relation(fields: [guestId], references: [id])
+  room        Room        @relation(fields: [roomId], references: [id])
+
+  @@map("bookings")
+}
