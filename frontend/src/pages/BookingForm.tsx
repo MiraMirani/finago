@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { ApiClientError, createBooking } from "../api/api";
 
@@ -24,14 +24,19 @@ const guestSchema = z.object({
 
 type GuestFormValues = z.infer<typeof guestSchema>;
 
-interface BookingFormLocationState {
-  roomId: number;
-  checkInDate: string;
-  checkOutDate: string;
-}
+const bookingSelectionSchema = z
+  .object({
+    roomId: z.coerce.number().int().positive(),
+    checkInDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    checkOutDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  })
+  .refine((value) => value.checkOutDate > value.checkInDate, {
+    message: "Check-out must be after check-in",
+    path: ["checkOutDate"],
+  });
 
 export function BookingForm() {
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<{
@@ -39,11 +44,17 @@ export function BookingForm() {
     statusCode?: number;
   } | null>(null);
 
-  const selection = location.state as BookingFormLocationState | null;
+  const selectionResult = bookingSelectionSchema.safeParse({
+    roomId: searchParams.get("roomId"),
+    checkInDate: searchParams.get("checkInDate"),
+    checkOutDate: searchParams.get("checkOutDate"),
+  });
 
-  if (!selection) {
+  if (!selectionResult.success) {
     return <Navigate to="/booking/search" replace />;
   }
+
+  const selection = selectionResult.data;
 
   const {
     register,

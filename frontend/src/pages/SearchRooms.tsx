@@ -40,12 +40,6 @@ const searchSchema = z
 
 type SearchFormValues = z.infer<typeof searchSchema>;
 
-interface BookingFormNavigationState {
-  roomId: number;
-  checkInDate: string;
-  checkOutDate: string;
-}
-
 function addDays(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() + days);
@@ -253,13 +247,13 @@ export function SearchRooms() {
                     <RoomCard
                       room={room}
                       onSelect={() => {
-                        const state: BookingFormNavigationState = {
-                          roomId: room.roomId,
+                        const params = new URLSearchParams({
+                          roomId: String(room.roomId),
                           checkInDate: availability.checkInDate,
                           checkOutDate: availability.checkOutDate,
-                        };
+                        });
 
-                        navigate("/booking/guest", { state });
+                        navigate(`/booking/guest?${params.toString()}`);
                       }}
                     />
                   </Grid>

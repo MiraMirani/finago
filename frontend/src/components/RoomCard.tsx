@@ -35,6 +35,9 @@ export function RoomCard({ room, onSelect }: RoomCardProps) {
         <Typography variant="h6">
           Room {room.roomNumber} · {room.category}
         </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Room ID: {room.roomId}
+        </Typography>
         <Button
           variant="outlined"
           color="primary"
